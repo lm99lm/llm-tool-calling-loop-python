@@ -1,0 +1,13 @@
+date,category,vendor,amount_usd,note
+2024-01-08,cloud,Hetzner,42.00,two dedicated boxes
+2024-01-11,saas,Linear,32.00,team seats
+2024-01-19,travel,Deutsche Bahn,88.40,offsite tickets
+2024-02-02,cloud,Cloudflare,25.00,workers paid plan
+2024-02-06,hardware,Framework,1149.00,replacement laptop
+2024-02-14,saas,Linear,32.00,team seats
+2024-02-21,cloud,Hetzner,42.00,two dedicated boxes
+2024-03-03,travel,Airbnb,310.75,offsite lodging
+2024-03-09,saas,Figma,45.00,two editors
+2024-03-15,cloud,Hetzner,42.00,two dedicated boxes
+2024-03-22,hardware,Keychron,79.00,keyboards
+2024-03-28,saas,Linear,32.00,team seats
