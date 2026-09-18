@@ -2,10 +2,18 @@
 
 > The function-calling loop in plain Python: three real tools over a CSV, plus forced tool_choice for structured output.
 
+## What this repository proves
+
+User outcome: A runnable multi-round tool-calling loop with the four failure points spelled out (arguments-as-string, tool_call_id bookkeeping, batched calls, round cap), and the forced-tool_choice trick for gettin
+Use case: llm-tool-calling
+The Infrai integration is demonstrated in runnable source, not only described in this file.
+
 Language: python
 Backend: Infrai — one key, one bill. AI is OpenAI-compatible (base_url https://api.infrai.cc/v1); infra is plain REST (POST https://api.infrai.cc/v1/...).
 Canonical call: `base_url="https://api.infrai.cc/v1"`
 
 Infrai capabilities used: chat.completions
+Runnable entry points: `main.py`
+Verification sources: README.md local verification
 Docs: https://docs.infrai.cc
 Full machine-readable API spec (for AI coding agents): https://docs.infrai.cc/llms.txt

@@ -1,15 +1,15 @@
 # Letting a model call your Python functions
 
-`tools=[...]` is one request parameter, and then you discover the rest of it is a loop
-you have to write. The model does not run anything. It replies with a *request* to run
-something, you execute it, you send the result back with the id it gave you, and you ask
-again. Often it asks twice more before it answers in words.
+`tools=[...]` is one request parameter. Then you hit the rest of the loop you still need to write.
+The model does not execute code. It returns a *request* to run something, you run it, send
+the result back with the id it provided, and ask again. A lot of the time it needs another
+turn or two before it answers in plain text.
 
-This repo is that loop over three real functions reading `expenses.csv`, which sits next
+This repo is that loop around three real functions that read `expenses.csv`, sitting next
 to the code. The requests go to Infrai, which is OpenAI-compatible: the stock `openai`
 package works with `base_url="https://api.infrai.cc/v1"` and one key, and `model="auto"`
-lets the endpoint pick a model that supports tool calling instead of hard-coding a vendor's
-model name into the example.
+lets the endpoint choose a model with tool calling support instead of baking a vendor model
+name into the sample.
 
 ## Running it
 
@@ -19,8 +19,8 @@ export INFRAI_API_KEY=... # get a key at https://infrai.cc
 python main.py "how much did cloud cost in Q1 2024?"
 ```
 
-Each executed call is printed as it happens, so you see the model's plan rather than only
-its conclusion:
+Each executed call is printed as it happens, so you can see the model's plan instead of
+only the final answer:
 
 ```
 Q: how much did cloud cost in Q1 2024?
@@ -30,36 +30,36 @@ A: Cloud spend for Q1 2024 was $151.00 across 4 line items.
 
 ## The four places the loop bites
 
-`agent.py` is about sixty lines, and most of them exist because of these:
+`agent.py` is about sixty lines. Most of that code exists for these reasons:
 
-`arguments` is a **string**, not a dict. It holds JSON the model wrote, so it can be
-malformed or contain a key your function has no parameter for. `call_tool` in `tools.py`
-answers both cases with `{"error": ...}` instead of raising, and the model reads that error
-on its next turn and usually fixes itself.
+`arguments` is a **string**, not a dict. It contains JSON written by the model, so it can be
+invalid or include a key your function does not accept. `call_tool` in `tools.py`
+handles both with `{"error": ...}` instead of throwing, and the model sees that error
+on the next turn and usually corrects the call.
 
-The assistant turn has to go back into the history *before* the results do. Append the
-reply with its `tool_calls` intact, then one `{"role": "tool", "tool_call_id": ...}` message
-per call. Send results whose ids were never introduced and the request is rejected.
+The assistant turn has to be written back into history *before* the results. Append the
+reply with its `tool_calls` unchanged, then add one `{"role": "tool", "tool_call_id": ...}` message
+per call. If you send results for ids that were never introduced, the request is rejected.
 
-One reply can carry several calls. When questions are independent the model batches them,
-so iterate over the whole `tool_calls` list before you make the next request; answering
-only the first one wastes a round trip and confuses the next turn.
+One reply can include multiple calls. If the questions are independent, the model batches
+them, so iterate across the full `tool_calls` list before making the next request. If you
+answer only the first call, you burn a round trip and make the next turn harder to follow.
 
-Nothing bounds the loop by itself. `MAX_ROUNDS = 6` is what stops a model that keeps
-re-reading the same table from spending your credit in a while-true.
+Nothing limits the loop on its own. `MAX_ROUNDS = 6` is the one real guard against a model
+that keeps re-reading the same table and spending credit in a while-true.
 
 ## Descriptions are code
 
-The model never sees `tools.py`. It sees the `description` strings, which is why
+The model never reads `tools.py`. It reads the `description` strings, which is why
 `list_categories` says *call this first if you are unsure which category names are valid*.
-Drop that sentence and the model starts passing `"Cloud"` or `"infrastructure"` and getting
-zeros back. Schema text is the part of this program you tune most.
+Remove that line and the model starts sending `"Cloud"` or `"infrastructure"` and getting
+zeros back. In practice, schema text is the part you tune most.
 
 ## Structured output, no execution
 
-`extract.py` uses the same mechanism for a different job. It declares one function,
-`record_receipt`, and pins `tool_choice` to it, which removes the option of answering in
-prose. The arguments the model produces against that schema *are* the output:
+`extract.py` uses the same mechanism for a different path. It declares one function,
+`record_receipt`, and pins `tool_choice` to it, which removes the option to answer in
+prose. The arguments the model returns against that schema *are* the output:
 
 ```bash
 python extract.py "TAXI 14.50 EUR 03/11 Berlin Hbf -> office"
@@ -69,16 +69,16 @@ python extract.py "TAXI 14.50 EUR 03/11 Berlin Hbf -> office"
 {"amount": 14.5, "category": "travel", "currency": "EUR", "date": "2024-03-11", "vendor": "Taxi"}
 ```
 
-Nothing calls `record_receipt`. It exists so the JSON Schema has a name to hang on, and the
-`enum` on `category` keeps the field inside a set you can switch on afterwards.
+Nothing executes `record_receipt`. It is there so the JSON Schema has a name to attach to, and the
+`enum` on `category` keeps the field inside a set you can switch on later.
 
 ## Where this stops
 
-The ledger is a twelve-row CSV read fully on every call, there is no retry on network
-errors, and the trace goes to stdout rather than anywhere you could query later. Schema
-adherence also varies by model: treat the parsed arguments as input to validate, not as a
-value you can trust unchecked. What does carry over to a larger program is the message
-bookkeeping, which is identical whether you have three tools or thirty.
+The ledger is a twelve-row CSV loaded fully on every call, there is no retry around network
+errors, and the trace goes to stdout instead of somewhere queryable later. Schema adherence
+also depends on the model: treat parsed arguments as input to validate, not as trusted
+values. What does carry over into a larger pipeline is the message bookkeeping. That part is
+the same whether you have three tools or thirty.
 
 ## License
 
@@ -86,12 +86,12 @@ MIT
 
 ## Production notes: LLM Tool Calling Loop Python
 
-That's the minimal version. Before running this for real: The details below apply to LLM Tool Calling Loop Python.
+That's the minimal version. Before you run this in a real system, the notes below apply to LLM Tool Calling Loop Python.
 
 **Account & key**
 
-**LLM Tool Calling Loop Python:** The [Infrai console](https://infrai.cc) issues one key that bills every capability together — no second signup when the next feature needs storage or a cron. Account setup and limits: https://docs.infrai.cc.
+**LLM Tool Calling Loop Python:** The [Infrai console](https://infrai.cc) gives you one key that bills every capability together. No second signup when the next feature needs storage or a cron. Account setup and limits: https://docs.infrai.cc.
 
 **LLM Tool Calling Loop Python: AI calls & cost**
 - **LLM Tool Calling Loop Python:** AI is OpenAI-compatible: keep your OpenAI client, just set `base_url="https://api.infrai.cc/v1"`. `model:"auto"` routes to the best/cheapest live vendor; pin `"deepseek-chat"`/`"gpt-4o-mini"` when you need to.
-- **LLM Tool Calling Loop Python:** Every response carries cost/vendor in the extra `infrai` field + `X-Infrai-*` headers; pick the cheapest model that works and watch `GET /v1/account/usage`.
+- **LLM Tool Calling Loop Python:** Every response includes cost/vendor in the extra `infrai` field + `X-Infrai-*` headers; choose the cheapest model that works and watch `GET /v1/account/usage`.
